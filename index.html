@@ -46,12 +46,13 @@
   .dropzone h1{font-size:22px;font-weight:500;margin-bottom:12px;letter-spacing:0.05em}
   .dropzone p{font-size:14px;color:#7D8590;line-height:1.7}
   .dropzone .or{margin:20px 0 8px;color:#7D8590;font-size:12px;letter-spacing:0.2em}
-  .dropzone button{
-    margin-top:12px;background:#5B7E7B;border:none;color:white;
+  .dropzone .choose-label{
+    display:inline-block;margin-top:12px;background:#5B7E7B;border:none;color:white;
     padding:10px 28px;border-radius:8px;font-size:14px;cursor:pointer;transition:all .15s;
+    -webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;
   }
-  .dropzone button:hover{background:#8FB3B0}
-  #fileInput{display:block;width:100%;margin-top:12px;padding:10px;border:1px solid #2A3441;border-radius:8px;color:#E6EDF3;background:#161B22;font-size:13px}
+  .dropzone .choose-label:active{background:#8FB3B0}
+  #fileInput{position:absolute;width:0.1px;height:0.1px;opacity:0;overflow:hidden;pointer-events:none}
 
   .recent{width:100%;max-width:560px;margin-top:32px}
   .recent .title{font-size:11px;letter-spacing:0.2em;color:#7D8590;margin-bottom:12px;text-transform:uppercase}
@@ -140,8 +141,8 @@
       <textarea id="pasteInput" placeholder="粘贴HTML代码到这里..." style="width:100%;height:120px;margin-top:12px;padding:12px;border:1px solid #2A3441;border-radius:10px;background:#161B22;color:#E6EDF3;font-size:12px;resize:vertical;font-family:monospace;display:none"></textarea>
       <button id="pasteBtn" style="margin-top:8px;display:none;background:#5B7E7B;border:none;color:white;padding:10px 28px;border-radius:8px;font-size:14px;cursor:pointer">打开粘贴的HTML</button>
       <div class="or" id="pasteToggle" style="cursor:pointer;color:#7D8590;font-size:12px;letter-spacing:0.2em;margin-top:8px">— 粘贴导入 —</div>
-      <button id="chooseBtn">选择文件</button>
-      <input type="file" id="fileInput" accept="*/*">
+      <label id="chooseLabel" for="fileInput" class="choose-label">选择文件</label>
+      <input type="file" id="fileInput" accept=".html,.htm,text/html,*/*">
     </div>
 
     <div class="recent" id="recent" style="display:none">
@@ -179,6 +180,7 @@ const viewer = document.getElementById('viewer');
 const frame = document.getElementById('frame');
 const dropzone = document.getElementById('dropzone');
 const fileInput = document.getElementById('fileInput');
+const chooseLabel = document.getElementById('chooseLabel');
 const topbar = document.getElementById('topbar');
 const tapZone = document.getElementById('tapZone');
 const tapZoneFull = document.getElementById('tapZoneFull');
@@ -325,13 +327,19 @@ document.getElementById('reloadBtn').onclick = ()=>{
   if(cur){ openContent(cur.content, cur.name); toast('已刷新'); }
 };
 
-document.getElementById('chooseBtn').onclick = (e)=>{e.stopPropagation(); fileInput.click();};
-dropzone.onclick = ()=>fileInput.click();
+// file input 由原生 label 机制触发，不再用 JS .click()
 fileInput.onchange = (e)=>{
   const f = e.target.files[0];
   if(f) openFile(f);
   fileInput.value='';
 };
+
+// dropzone 点击时触发 label（原生触发 file input）
+dropzone.addEventListener('click', (e)=>{
+  // 如果点在 label/button/textarea 上，不重复触发
+  if(e.target.closest('#chooseLabel') || e.target.closest('button') || e.target.closest('textarea')) return;
+  chooseLabel.click();
+});
 
 let dragCounter = 0;
 window.addEventListener('dragenter',(e)=>{
@@ -351,6 +359,24 @@ window.addEventListener('drop',(e)=>{
   const f = e.dataTransfer.files[0];
   if(f && (f.name.endsWith('.html') || f.name.endsWith('.htm'))) openFile(f);
 });
+
+// 粘贴导入
+document.getElementById('pasteToggle').onclick = (e)=>{
+  e.stopPropagation();
+  const pasteInput = document.getElementById('pasteInput');
+  const pasteBtn = document.getElementById('pasteBtn');
+  const showing = pasteInput.style.display === 'block';
+  pasteInput.style.display = showing ? 'none' : 'block';
+  pasteBtn.style.display = showing ? 'none' : 'inline-block';
+};
+document.getElementById('pasteBtn').onclick = (e)=>{
+  e.stopPropagation();
+  const html = document.getElementById('pasteInput').value.trim();
+  if(!html) { toast('请先粘贴HTML代码'); return; }
+  const name = 'paste-' + new Date().toISOString().replace(/[:.]/g,'-').slice(0,19) + '.html';
+  addRecent(name, html);
+  openContent(html, name);
+};
 
 window.addEventListener('popstate', ()=>{
   if(viewer.classList.contains('show')){
