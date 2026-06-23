@@ -365,13 +365,7 @@ document.addEventListener('keydown',(e)=>{
 
 (function resume(){
   renderRecent();
-  let name = '';
-  try{ name = localStorage.getItem(RESUME_KEY) || ''; }catch(e){}
-  if(name){
-    const list = loadRecent();
-    const item = list.find(x=>x.name===name) || (list.length ? list[list.length-1] : null);
-    if(item){ openContent(item.content, item.name); return; }
-  }
+  // auto-resume disabled — always start on home screen
   try{ history.pushState({home:true}, ''); }catch(e){}
 })();
 </script>
