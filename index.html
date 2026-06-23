@@ -137,6 +137,9 @@
       <h1>HTML 预览</h1>
       <p>把 .html 文件拖到这里<br>或者选一个打开</p>
       <div class="or">— OR —</div>
+      <textarea id="pasteInput" placeholder="粘贴HTML代码到这里..." style="width:100%;height:120px;margin-top:12px;padding:12px;border:1px solid #2A3441;border-radius:10px;background:#161B22;color:#E6EDF3;font-size:12px;resize:vertical;font-family:monospace;display:none"></textarea>
+      <button id="pasteBtn" style="margin-top:8px;display:none;background:#5B7E7B;border:none;color:white;padding:10px 28px;border-radius:8px;font-size:14px;cursor:pointer">打开粘贴的HTML</button>
+      <div class="or" id="pasteToggle" style="cursor:pointer;color:#7D8590;font-size:12px;letter-spacing:0.2em;margin-top:8px">— 粘贴导入 —</div>
       <button id="chooseBtn">选择文件</button>
       <input type="file" id="fileInput" accept="*/*">
     </div>
